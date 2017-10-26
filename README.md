@@ -20,4 +20,4 @@
 ##What gets evaluated
 - Requirements are met
 - Code quality (both production and test)
-- How simple it is to run the application (embedded DB/embedded container)
+- How simple it is to run the application (embedded DB/embedded container) 
