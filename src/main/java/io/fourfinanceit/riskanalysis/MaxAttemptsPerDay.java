@@ -22,7 +22,7 @@ public class MaxAttemptsPerDay implements RiskAnalysis {
     @Override
     public void analyse(LoanRequest loanRequest) {
         String remoteAddress = loanRequest.getRemoteAddress();
-        Long applicationCountFromSameIp = loanRequestRepository.q(remoteAddress, today());
+        Long applicationCountFromSameIp = loanRequestRepository.countRequestFromSameIpPerDay(remoteAddress, today());
         if (applicationCountFromSameIp > MAX_APPLICATIONS_PER_DAY) {
             throw new FailedRiskAnalysis(DECLINED_DUE_RISK_ANALYSIS.getDescription());
         }
