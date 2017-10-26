@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        springBootVersion = '1.2.7.RELEASE'
+        springBootVersion = '1.5.8.RELEASE'
     }
     repositories {
         mavenCentral()
@@ -14,8 +14,14 @@ buildscript {
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
-apply plugin: 'spring-boot' 
-apply plugin: 'io.spring.dependency-management' 
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+
+description = """HomeworkApplication"""
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
 
 jar {
     baseName = 'homework'
@@ -30,8 +36,13 @@ repositories {
 
 
 dependencies {
-    compile('org.springframework.boot:spring-boot-starter')
-    testCompile('org.springframework.boot:spring-boot-starter-test') 
+    compile('org.springframework.boot:spring-boot-starter-data-jpa')
+    compile 'org.hibernate:hibernate-java8'
+    compile('org.springframework.boot:spring-boot-starter-web')
+    compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.6.1'
+    runtime('org.springframework.boot:spring-boot-devtools')
+    runtime 'org.hsqldb:hsqldb'
+    testCompile('org.springframework.boot:spring-boot-starter-test')
 }
 
 
