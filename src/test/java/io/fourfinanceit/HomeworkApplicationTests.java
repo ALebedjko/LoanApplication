@@ -10,7 +10,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = HomeworkApplication.class)
+@SpringBootTest(classes = BootApplication.class)
 public class HomeworkApplicationTests {
 
     @Autowired

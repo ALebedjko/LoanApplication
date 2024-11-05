@@ -60,21 +60,21 @@ public class LoanServiceTest {
     private static List<Loan> getListOfExpectedLoans() {
         List<Loan> expectedLoansList = new ArrayList<>();
 
-        Loan loan0 = new Loan(getFirstExpectedCustomer(), new BigDecimal(100.00), 30);
+        Loan loan0 = new Loan(getFirstExpectedCustomer(), new BigDecimal("100.00"), 30);
         expectedLoansList.add(loan0);
 
-        Loan loan1 = new Loan(getSecondExpectedCustomer(), new BigDecimal(200.00), 60);
+        Loan loan1 = new Loan(getSecondExpectedCustomer(), new BigDecimal("200.00"), 60);
         expectedLoansList.add(loan1);
 
         Loan loan2 = new Loan();
         loan2.setTermInDays(90);
-        loan2.setAmount(new BigDecimal(800.00));
+        loan2.setAmount(new BigDecimal("800.00"));
         loan2.setCustomer(getSecondExpectedCustomer());
         expectedLoansList.add(loan2);
 
         Loan loan3 = new Loan();
         loan3.setTermInDays(50);
-        loan3.setAmount(new BigDecimal(200.00));
+        loan3.setAmount(new BigDecimal("200.00"));
         loan3.setCustomer(getSecondExpectedCustomer());
         expectedLoansList.add(loan3);
 

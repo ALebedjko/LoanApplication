@@ -1,14 +1,25 @@
 package io.fourfinanceit.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
+import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.FetchType.*;
 
 @Entity
+@Getter
+@Setter
+@RequiredArgsConstructor
 public class Loan extends AuditableEntity {
 
     @Id
@@ -24,32 +35,24 @@ public class Loan extends AuditableEntity {
     @NotNull
     private Integer termInDays;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = ALL)
     @JsonIgnore
     private Customer customer;
 
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(fetch = EAGER, cascade = ALL, orphanRemoval = true)
     @JsonIgnore
     private List<LoanExtension> loanExtensions;
 
-    public Loan() {
-    }
 
-    public Loan(Customer customer, BigDecimal amount, Integer termInDays) {
-        this.amount = amount;
-        this.termInDays = termInDays;
+
+    public Loan( Customer customer, @NotNull BigDecimal amount, @NotNull Integer termInDays) {
         this.customer = customer;
-    }
-
-    public Loan(BigDecimal amount, BigDecimal interest, Integer termInDays) {
-        this.amount = amount;
-        this.interest = interest;
-        this.termInDays = termInDays;
-    }
-
-    public Loan(BigDecimal amount, Integer termInDays) {
         this.amount = amount;
         this.termInDays = termInDays;
+
+    }
+
+    public Loan() {
     }
 
     public void addLoanExtension(LoanExtension loanExtension) {
@@ -80,34 +83,6 @@ public class Loan extends AuditableEntity {
         return amount;
     }
 
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }
-
-    public BigDecimal getInterest() {
-        return interest;
-    }
-
-    public void setInterest(BigDecimal interest) {
-        this.interest = interest;
-    }
-
-    public Integer getTermInDays() {
-        return termInDays;
-    }
-
-    public void setTermInDays(Integer termInDays) {
-        this.termInDays = termInDays;
-    }
-
-    public Customer getCustomer() {
-        return customer;
-    }
-
-    public void setCustomer(Customer customer) {
-        this.customer = customer;
-    }
-
     @Override
     public String toString() {
         return "Loan{" +
@@ -126,18 +101,18 @@ public class Loan extends AuditableEntity {
 
         Loan loan = (Loan) o;
 
-        if (id != null ? !id.equals(loan.id) : loan.id != null) return false;
-        if (amount != null ? !amount.equals(loan.amount) : loan.amount != null) return false;
-        if (interest != null ? !interest.equals(loan.interest) : loan.interest != null) return false;
-        return termInDays != null ? termInDays.equals(loan.termInDays) : loan.termInDays == null;
+        if (!Objects.equals(id, loan.id)) return false;
+        if (!Objects.equals(amount, loan.amount)) return false;
+        if (!Objects.equals(interest, loan.interest)) return false;
+        return Objects.equals(termInDays, loan.termInDays);
     }
 
     @Override
     public int hashCode() {
         int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (amount != null ? amount.hashCode() : 0);
-        result = 31 * result + (interest != null ? interest.hashCode() : 0);
-        result = 31 * result + (termInDays != null ? termInDays.hashCode() : 0);
+        result = 31 * result + amount.hashCode();
+        result = 31 * result + interest.hashCode();
+        result = 31 * result + termInDays.hashCode();
         return result;
     }
 }

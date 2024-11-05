@@ -9,9 +9,7 @@ import io.fourfinanceit.repository.LoanRepository;
 import io.fourfinanceit.repository.LoanRequestRepository;
 import io.fourfinanceit.service.LoanService;
 import io.fourfinanceit.utils.DateUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +24,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static io.fourfinanceit.exception.ExceptionMessages.*;
-import static org.junit.Assert.assertEquals;
+
+import static org.springframework.http.HttpStatus.*;
+import static org.springframework.test.util.AssertionErrors.assertEquals;
 
 public class LoanControllerTest extends AbstractControllerTest {
     private static final String LOAN_URL = "/loan/";
@@ -64,7 +65,9 @@ public class LoanControllerTest extends AbstractControllerTest {
     @Test
     public void loanShouldBeSuccessfullyExtended() throws Exception {
         String uri = LOAN_URL + "extendLoan";
-        Loan expectedExtendedLoan = loanRepository.findOne(1L);
+        Optional<Loan> optionalExpectedExtendedLoan = loanRepository.findById(1L);
+        Loan expectedExtendedLoan = optionalExpectedExtendedLoan.get();
+
 
         LoanExtension loanExtension = new LoanExtension();
         loanExtension.setId(1L);
@@ -78,11 +81,12 @@ public class LoanControllerTest extends AbstractControllerTest {
                 .andReturn();
 
         int mvcResultResponseStatus = result.getResponse().getStatus();
-        HttpStatus httpResponseStatus = HttpStatus.valueOf(mvcResultResponseStatus);
+        HttpStatus httpResponseStatus = valueOf(mvcResultResponseStatus);
 
-        Loan actualExtendedLoan = loanRepository.findOne(1L);
+        Optional<Loan> optionalActualExtendedLoan = loanRepository.findById(1L);
+        Loan actualExtendedLoan = optionalActualExtendedLoan.get();
 
-        assertEquals("failure - expected status " + HttpStatus.OK, HttpStatus.OK, httpResponseStatus);
+        assertEquals("failure - expected status " + OK, OK, httpResponseStatus);
         assertEquals(expectedExtendedLoan, actualExtendedLoan);
         assertEquals(expectedExtendedLoan.getLoanExtensions().get(0), actualExtendedLoan.getLoanExtensions().get(0));
     }
@@ -102,12 +106,12 @@ public class LoanControllerTest extends AbstractControllerTest {
         log.debug("content = " + content);
 
         int mvcResultResponseStatus = result.getResponse().getStatus();
-        HttpStatus httpResponseStatus = HttpStatus.valueOf(mvcResultResponseStatus);
+        HttpStatus httpResponseStatus = valueOf(mvcResultResponseStatus);
 
         Loan actualLoan = loanService.listLoansByCustomerPersonalId("aaa-xxx0").get(0);
 
         assertEquals(expectedLoan, actualLoan);
-        assertEquals("failure - expected content " + HttpStatus.OK, HttpStatus.OK, httpResponseStatus);
+        assertEquals("failure - expected content " + OK, OK, httpResponseStatus);
     }
 
 
@@ -127,8 +131,8 @@ public class LoanControllerTest extends AbstractControllerTest {
         String exceptionMessage = exceptionJSONInfo.getMessages().iterator().next();
         log.debug("exceptionMessage = " + exceptionMessage);
 
-        HttpStatus httpResponseStatus = HttpStatus.valueOf(result.getResponse().getStatus());
-        assertEquals("failure - expected status " + HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR, httpResponseStatus);
+        HttpStatus httpResponseStatus = valueOf(result.getResponse().getStatus());
+        assertEquals("failure - expected status " + INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR, httpResponseStatus);
         assertEquals("failure - expected exception message" + expectedExceptionMessage, expectedExceptionMessage, exceptionMessage);
     }
 
@@ -161,8 +165,8 @@ public class LoanControllerTest extends AbstractControllerTest {
         String exceptionMessage = exceptionJSONInfo.getMessages().iterator().next();
         log.debug("exceptionMessage = " + exceptionMessage);
 
-        HttpStatus httpResponseStatus = HttpStatus.valueOf(result.getResponse().getStatus());
-        assertEquals("failure - expected status " + HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR, httpResponseStatus);
+        HttpStatus httpResponseStatus = valueOf(result.getResponse().getStatus());
+        assertEquals("failure - expected status " + INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR, httpResponseStatus);
         assertEquals("failure - expected exception message" + expectedExceptionMessage, expectedExceptionMessage, exceptionMessage);
     }
 
@@ -180,8 +184,8 @@ public class LoanControllerTest extends AbstractControllerTest {
         String exceptionMessage = exceptionJSONInfo.getMessages().iterator().next();
         log.debug("exceptionMessage = " + exceptionMessage);
 
-        HttpStatus httpResponseStatus = HttpStatus.valueOf(result.getResponse().getStatus());
-        assertEquals("failure - expected status " + HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR, httpResponseStatus);
+        HttpStatus httpResponseStatus = valueOf(result.getResponse().getStatus());
+        assertEquals("failure - expected status " + INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR, httpResponseStatus);
         assertEquals("failure - expected exception message" + expectedExceptionMessage, expectedExceptionMessage, exceptionMessage);
     }
 
@@ -200,8 +204,8 @@ public class LoanControllerTest extends AbstractControllerTest {
         String exceptionMessage = exceptionJSONInfo.getMessages().iterator().next();
         log.debug("exceptionMessage = " + exceptionMessage);
 
-        HttpStatus httpResponseStatus = HttpStatus.valueOf(result.getResponse().getStatus());
-        assertEquals("failure - expected status " + HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR, httpResponseStatus);
+        HttpStatus httpResponseStatus = valueOf(result.getResponse().getStatus());
+        assertEquals("failure - expected status " + INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR, httpResponseStatus);
         assertEquals("failure - expected exception message" + expectedExceptionMessage, expectedExceptionMessage, exceptionMessage);
     }
 

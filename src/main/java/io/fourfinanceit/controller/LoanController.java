@@ -8,7 +8,10 @@ import io.fourfinanceit.response.LoanResponse;
 import io.fourfinanceit.riskanalysis.FailedRiskAnalysis;
 import io.fourfinanceit.service.LoanService;
 import io.fourfinanceit.validator.LoanValidator;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.Builder;
+import lombok.RequiredArgsConstructor;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.ObjectError;
@@ -17,28 +20,20 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.fourfinanceit.response.LoanResponse.*;
+
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/loan")
 public class LoanController {
 
     private final LoanRepository loanRepository;
     private final LoanValidator loanValidator;
     private final LoanService loanService;
-
-    @Autowired
-    public LoanController(LoanRepository loanRepository,
-                          LoanValidator loanValidator, LoanService loanService) {
-        this.loanRepository = loanRepository;
-        this.loanValidator = loanValidator;
-        this.loanService = loanService;
-    }
 
     @InitBinder("loanRequest")
     protected void initBinder(final WebDataBinder binder) {
@@ -59,16 +54,18 @@ public class LoanController {
         List<LoanResponse> responseList = new ArrayList<>();
 
         for (Loan loan : loanList) {
-            LoanResponse response = new LoanResponse();
-            response.setId(loan.getId());
-            response.setCreated(loan.getCreated());
-            response.setUpdated(loan.getUpdated());
-            response.setAmount(loan.getAmount());
-            response.setInterest(loan.getInterest());
-            response.setTermInDays(loan.getTermInDays());
-            response.setLoanExtensions(loan.getLoanExtensions());
-            responseList.add(response);
+            builder().id(loan.getId());
+             builder().created(loan.getCreated());
+             builder().updated(loan.getUpdated());
+             builder().amount(loan.getAmount());
+             builder().interest(loan.getInterest());
+             builder().termInDays(loan.getTermInDays());
+             builder().loanExtensions(loan.getLoanExtensions());
+
+            LoanResponse loanResponse = builder().build();
+            responseList.add(loanResponse);
         }
+
         return responseList;
     }
 
@@ -90,9 +87,9 @@ public class LoanController {
     public ExceptionJSONInfo handleValidationError(HttpServletRequest request, ConstraintViolationException exception) {
         List<String> errorMessages = new ArrayList<>();
 
-        for (ConstraintViolation constraintViolation : exception.getConstraintViolations()) {
-            errorMessages.add(constraintViolation.getPropertyPath() + " " + constraintViolation.getMessage());
-        }
+//        for (ConstraintViolation constraintViolation : exception.getConstraintViolations()) {
+//            errorMessages.add(constraintViolation.getPropertyPath() + " " + constraintViolation.getMessage());
+//        }
 
         ExceptionJSONInfo exceptionJSONInfo = new ExceptionJSONInfo();
         exceptionJSONInfo.setMessages(errorMessages);

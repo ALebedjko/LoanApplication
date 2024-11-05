@@ -9,38 +9,30 @@ import io.fourfinanceit.repository.CustomerRepository;
 import io.fourfinanceit.repository.LoanRepository;
 import io.fourfinanceit.repository.LoanRequestRepository;
 import io.fourfinanceit.riskanalysis.RiskAnalysis;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 import static java.math.RoundingMode.HALF_EVEN;
 
 @Service
+@RequiredArgsConstructor
 public class LoanService {
 
     private static final int DAYS_PER_WEEK = 7;
     private final Logger LOG = LoggerFactory.getLogger(LoanService.class);
-
 
     private final LoanConfig loanConfig;
     private final LoanRepository loanRepository;
     private final CustomerRepository customerRepository;
     private final List<RiskAnalysis> riskAnalyses;
     private final LoanRequestRepository loanRequestRepository;
-
-    @Autowired
-    public LoanService(LoanConfig loanConfig, LoanRepository loanRepository, CustomerRepository customerRepository, List<RiskAnalysis> riskAnalysis, LoanRequestRepository loanRequestRepository) {
-        this.loanConfig = loanConfig;
-        this.loanRepository = loanRepository;
-        this.customerRepository = customerRepository;
-        this.riskAnalyses = riskAnalysis;
-        this.loanRequestRepository = loanRequestRepository;
-    }
 
     @Transactional
     public Loan createLoan(LoanRequest loanRequest) {
@@ -90,15 +82,19 @@ public class LoanService {
 
     @Transactional
     public void extendLoanById(Long loanId, int extensionTermInDays) {
-        Loan loan = loanRepository.findOne(loanId);
-        BigDecimal additionalInterest = interest(loan.getAmount(), extensionTermInDays);
-        loan.setInterest(loan.getInterest().add(additionalInterest));
+        Optional<Loan> loan = loanRepository.findById(loanId);
 
-        LoanExtension loanExtension = new LoanExtension();
-        loanExtension.setExtensionTermInDays(extensionTermInDays);
-        loanExtension.setAdditionalInterest(additionalInterest);
-        loan.addLoanExtension(loanExtension);
+        loan.ifPresent( presentLoan -> {
+            BigDecimal additionalInterest = interest(presentLoan.getAmount(), extensionTermInDays);
+            presentLoan.setInterest(presentLoan.getInterest().add(additionalInterest));
 
-        loanRepository.save(loan);
+            LoanExtension loanExtension = new LoanExtension();
+            loanExtension.setExtensionTermInDays(extensionTermInDays);
+            loanExtension.setAdditionalInterest(additionalInterest);
+            presentLoan.addLoanExtension(loanExtension);
+
+            loanRepository.save(presentLoan);
+        });
+
     }
 }

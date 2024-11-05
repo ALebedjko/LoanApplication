@@ -3,10 +3,10 @@ package io.fourfinanceit.config;
 import io.fourfinanceit.domain.Customer;
 import io.fourfinanceit.domain.Loan;
 import io.fourfinanceit.repository.CustomerRepository;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 
 @Component
