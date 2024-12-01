@@ -2,7 +2,6 @@ package io.fourfinanceit.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -23,7 +22,8 @@ import static jakarta.persistence.FetchType.*;
 public class Loan extends AuditableEntity {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "loan_sequence")
+    @SequenceGenerator(name = "loan_sequence", sequenceName = "loan_seq", allocationSize = 1)
     private Long id;
 
     @NotNull
@@ -37,7 +37,7 @@ public class Loan extends AuditableEntity {
 
     @ManyToOne(cascade = ALL)
     @JsonIgnore
-    private Customer customer;
+    private Client client;
 
     @OneToMany(fetch = EAGER, cascade = ALL, orphanRemoval = true)
     @JsonIgnore
@@ -45,8 +45,8 @@ public class Loan extends AuditableEntity {
 
 
 
-    public Loan( Customer customer, @NotNull BigDecimal amount, @NotNull Integer termInDays) {
-        this.customer = customer;
+    public Loan(Client client, @NotNull BigDecimal amount, @NotNull Integer termInDays) {
+        this.client = client;
         this.amount = amount;
         this.termInDays = termInDays;
 

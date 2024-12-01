@@ -9,13 +9,13 @@ import io.fourfinanceit.repository.LoanRepository;
 import io.fourfinanceit.repository.LoanRequestRepository;
 import io.fourfinanceit.service.LoanService;
 import io.fourfinanceit.utils.DateUtils;
-import org.junit.jupiter.api.Test;
+
+import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -27,18 +27,24 @@ import java.util.List;
 import java.util.Optional;
 
 import static io.fourfinanceit.exception.ExceptionMessages.*;
-
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.springframework.http.HttpStatus.*;
+import static org.springframework.http.MediaType.*;
 import static org.springframework.test.util.AssertionErrors.assertEquals;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class LoanControllerTest extends AbstractControllerTest {
-    private static final String LOAN_URL = "/loan/";
-    private static final TypeReference LOAN_LIST_TYPE = new TypeReference<List<Loan>>() {
+
+    private static final String LOANS_URL = "/loans/";
+
+    private static final TypeReference<List<Loan>> LOAN_LIST_TYPE = new TypeReference<>() {
     };
 
-    private static final TypeReference EXCEPTION_JSON_TYPE = new TypeReference<ExceptionJSONInfo>() {
+    private static final TypeReference<ExceptionJSONInfo> EXCEPTION_JSON_TYPE = new TypeReference<>() {
     };
-    private final Logger log = LoggerFactory.getLogger(LoanService.class);
+
+    private final Logger log = LoggerFactory.getLogger(LoanControllerTest.class);
+
     @Value("${MAX_LOAN_AMOUNT}")
     BigDecimal MAX_LOAN_AMOUNT;
 
@@ -51,23 +57,22 @@ public class LoanControllerTest extends AbstractControllerTest {
     @Autowired
     LoanRepository loanRepository;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    public void tearDown() {
         DateUtils.reset();
         loanRequestRepository.deleteAll();
     }
 
     @Test
     public void loanShouldBeSuccessfullyExtended() throws Exception {
-        String uri = LOAN_URL + "extendLoan";
+        String uri = LOANS_URL + "extendLoan";
         Optional<Loan> optionalExpectedExtendedLoan = loanRepository.findById(1L);
         Loan expectedExtendedLoan = optionalExpectedExtendedLoan.get();
-
 
         LoanExtension loanExtension = new LoanExtension();
         loanExtension.setId(1L);
@@ -87,8 +92,8 @@ public class LoanControllerTest extends AbstractControllerTest {
         Loan actualExtendedLoan = optionalActualExtendedLoan.get();
 
         assertEquals("failure - expected status " + OK, OK, httpResponseStatus);
-        assertEquals(expectedExtendedLoan, actualExtendedLoan);
-        assertEquals(expectedExtendedLoan.getLoanExtensions().get(0), actualExtendedLoan.getLoanExtensions().get(0));
+        assertEquals("expect should correspond actual loan", expectedExtendedLoan, actualExtendedLoan);
+        assertEquals("extension count should match", expectedExtendedLoan.getLoanExtensions().get(0), actualExtendedLoan.getLoanExtensions().get(0));
     }
 
     @Test
@@ -98,9 +103,9 @@ public class LoanControllerTest extends AbstractControllerTest {
         expectedLoan.setId(7L);
         expectedLoan.setLoanExtensions(new ArrayList<>());
 
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.post(LOAN_URL)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectToJson(new LoanRequest(new BigDecimal(50), 14, "aaa-xxx0", "John", "Smith"))))
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.post(LOANS_URL)
+                        .contentType(APPLICATION_JSON)
+                        .content(objectToJson(new LoanRequest(new BigDecimal(50), 14, "aaa-xxx0", "John", "Smith"))))
                 .andReturn();
         String content = result.getResponse().getContentAsString();
         log.debug("content = " + content);
@@ -110,7 +115,7 @@ public class LoanControllerTest extends AbstractControllerTest {
 
         Loan actualLoan = loanService.listLoansByCustomerPersonalId("aaa-xxx0").get(0);
 
-        assertEquals(expectedLoan, actualLoan);
+        assertEquals("loans should match", expectedLoan, actualLoan);
         assertEquals("failure - expected content " + OK, OK, httpResponseStatus);
     }
 
@@ -121,9 +126,9 @@ public class LoanControllerTest extends AbstractControllerTest {
 
         DateUtils.setNow(LocalDate.now().atStartOfDay());
 
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.post(LOAN_URL)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectToJson(new LoanRequest(MAX_LOAN_AMOUNT, 1, "abc-xyz0", "John", "Smith"))))
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.post(LOANS_URL)
+                        .contentType(APPLICATION_JSON)
+                        .content(objectToJson(new LoanRequest(MAX_LOAN_AMOUNT, 1, "abc-xyz0", "John", "Smith"))))
                 .andReturn();
 
         String content = result.getResponse().getContentAsString();
@@ -141,29 +146,31 @@ public class LoanControllerTest extends AbstractControllerTest {
         String expectedExceptionMessage = DECLINED_DUE_RISK_ANALYSIS.getDescription();
 
         DateUtils.setNow(LocalDateTime.now());
-        String uri = LOAN_URL;
+        String uri = LOANS_URL;
+
         mvc.perform(MockMvcRequestBuilders.post(uri)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectToJson(new LoanRequest(new BigDecimal(10), 1, "abc-xyz0", "John", "Smith"))))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectToJson(new LoanRequest(new BigDecimal(10), 1, "abc-xyz0", "John", "Smith"))))
                 .andReturn();
+
         mvc.perform(MockMvcRequestBuilders.post(uri)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectToJson(new LoanRequest(new BigDecimal(10), 1, "abc-xyz0", "John", "Smith"))))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectToJson(new LoanRequest(new BigDecimal(10), 1, "abc-xyz0", "John", "Smith"))))
                 .andReturn();
+
         mvc.perform(MockMvcRequestBuilders.post(uri)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectToJson(new LoanRequest(new BigDecimal(10), 1, "abc-xyz0", "John", "Smith"))))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectToJson(new LoanRequest(new BigDecimal(10), 1, "abc-xyz0", "John", "Smith"))))
                 .andReturn();
 
         MvcResult result = mvc.perform(MockMvcRequestBuilders.post(uri)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectToJson(new LoanRequest(new BigDecimal(10), 1, "abc-xyz0", "John", "Smith"))))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectToJson(new LoanRequest(new BigDecimal(10), 1, "abc-xyz0", "John", "Smith"))))
                 .andReturn();
 
         String content = result.getResponse().getContentAsString();
         ExceptionJSONInfo exceptionJSONInfo = super.mapFromJson(content, EXCEPTION_JSON_TYPE);
         String exceptionMessage = exceptionJSONInfo.getMessages().iterator().next();
-        log.debug("exceptionMessage = " + exceptionMessage);
 
         HttpStatus httpResponseStatus = valueOf(result.getResponse().getStatus());
         assertEquals("failure - expected status " + INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR, httpResponseStatus);
@@ -175,18 +182,17 @@ public class LoanControllerTest extends AbstractControllerTest {
         String expectedExceptionMessage = AMOUNT_NOT_NULL_MSG.getDescription();
 
         MvcResult result = mvc.perform(MockMvcRequestBuilders
-                .post(LOAN_URL).contentType(MediaType.APPLICATION_JSON)
-                .content(objectToJson(new LoanRequest(null, 1, "abc-xyz", "Vanja", "Ivanov"))))
+                        .post(LOANS_URL).contentType(APPLICATION_JSON)
+                        .content(objectToJson(new LoanRequest(null, 1, "abc-xyz", "Vanja", "Ivanov"))))
                 .andReturn();
 
         String content = result.getResponse().getContentAsString();
         ExceptionJSONInfo exceptionJSONInfo = super.mapFromJson(content, EXCEPTION_JSON_TYPE);
         String exceptionMessage = exceptionJSONInfo.getMessages().iterator().next();
-        log.debug("exceptionMessage = " + exceptionMessage);
 
         HttpStatus httpResponseStatus = valueOf(result.getResponse().getStatus());
-        assertEquals("failure - expected status " + INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR, httpResponseStatus);
-        assertEquals("failure - expected exception message" + expectedExceptionMessage, expectedExceptionMessage, exceptionMessage);
+        assertEquals("status should match", INTERNAL_SERVER_ERROR, httpResponseStatus);
+        assertEquals("exception messages should match", expectedExceptionMessage, exceptionMessage);
     }
 
     @Test
@@ -195,18 +201,18 @@ public class LoanControllerTest extends AbstractControllerTest {
                 "Maximum loan amount is " + MAX_LOAN_AMOUNT;
 
         MvcResult result = mvc.perform(MockMvcRequestBuilders
-                .post(LOAN_URL).contentType(MediaType.APPLICATION_JSON)
-                .content(objectToJson(new LoanRequest(new BigDecimal(301), 1, "abc-xyz", "Vanja", "Ivanov"))))
+                        .post(LOANS_URL).contentType(APPLICATION_JSON)
+                        .content(objectToJson(
+                                new LoanRequest(new BigDecimal(301), 1, "abc-xyz", "Vanja", "Ivanov"))))
                 .andReturn();
 
         String content = result.getResponse().getContentAsString();
         ExceptionJSONInfo exceptionJSONInfo = super.mapFromJson(content, EXCEPTION_JSON_TYPE);
         String exceptionMessage = exceptionJSONInfo.getMessages().iterator().next();
-        log.debug("exceptionMessage = " + exceptionMessage);
 
         HttpStatus httpResponseStatus = valueOf(result.getResponse().getStatus());
-        assertEquals("failure - expected status " + INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR, httpResponseStatus);
-        assertEquals("failure - expected exception message" + expectedExceptionMessage, expectedExceptionMessage, exceptionMessage);
+        assertEquals("status should match", INTERNAL_SERVER_ERROR, httpResponseStatus);
+        assertEquals("exception messages should match", expectedExceptionMessage, exceptionMessage);
     }
 
     @Test
@@ -219,42 +225,42 @@ public class LoanControllerTest extends AbstractControllerTest {
         expectedExceptionMessages.add(PERSONAL_ID_NOT_NULL_MSG.getDescription());
 
         MvcResult result = mvc.perform(MockMvcRequestBuilders
-                .post(LOAN_URL)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectToJson(new LoanRequest(null, null, "", "", ""))))
+                        .post(LOANS_URL)
+                        .contentType(APPLICATION_JSON)
+                        .content(objectToJson(new LoanRequest(null, null, "", "", ""))))
                 .andReturn();
 
         String content = result.getResponse().getContentAsString();
         ExceptionJSONInfo exceptionJSONInfo = super.mapFromJson(content, EXCEPTION_JSON_TYPE);
         List<String> exceptionMessages = exceptionJSONInfo.getMessages();
-        log.debug("exceptionMessage = " + exceptionMessages);
 
         int status = result.getResponse().getStatus();
-        assertEquals("failure - expected status 500", 500, status);
+        assertEquals("status should be 500", INTERNAL_SERVER_ERROR.value(), status);
         assertEquals("failure - expected exception message" + expectedExceptionMessages, expectedExceptionMessages, exceptionMessages);
     }
 
     @Test
     public void listOfLoansShouldBeSuccessfullyRetrieved() throws Exception {
-        String uri = "/loan/list/";
+        String uri = "/loans/list";
 
-        List<Loan> expectedLoanList = loanRepository.findAll();
+        List<Loan> expectedLoans = loanRepository.findAll();
 
         MvcResult result = mvc.perform(MockMvcRequestBuilders.get(uri))
                 .andReturn();
+
         String content = result.getResponse().getContentAsString();
-        List<Loan> loanList = (super.mapFromJson(content, LOAN_LIST_TYPE));
-        log.debug("loanList = " + loanList);
+        List<Loan> loanList = super.mapFromJson(content, LOAN_LIST_TYPE);
 
         int status = result.getResponse().getStatus();
-        assertEquals("failure - expected status 200", 200, status);
-        assertEquals("failure - Loan lists should be equal", expectedLoanList, loanList);
+        assertEquals("failure - expected status 200", OK.value(), status);
+        assertThat(loanList).containsExactlyInAnyOrderElementsOf(expectedLoans);
     }
 
     @Test
     public void listOfLoanShouldBeRetrievedSuccessfullyByPersonalId() throws Exception {
         Loan firstExpectedLoan = new Loan(new BigDecimal("20.30"), new BigDecimal("20.50"), 10);
         firstExpectedLoan.setId(2L);
+
         Loan secondExpectedLoan = new Loan(new BigDecimal("100.50"), new BigDecimal("50.00"), 30);
         secondExpectedLoan.setId(3L);
 
@@ -262,18 +268,19 @@ public class LoanControllerTest extends AbstractControllerTest {
         expectedLoans.add(firstExpectedLoan);
         expectedLoans.add(secondExpectedLoan);
 
-        String uri = "/loan/list-by-personal-id";
+        String personalId = "abc-xyz1";
+        String uri = "/loans/personal-id/" + personalId;
+
         MvcResult result = mvc
-                .perform(MockMvcRequestBuilders.get(uri).param("personalId", "abc-xyz1"))
+                .perform(MockMvcRequestBuilders.get(uri))
                 .andReturn();
+
         String content = result.getResponse().getContentAsString();
-        List<Loan> loanList = (super.mapFromJson(content, LOAN_LIST_TYPE));
+        List<Loan> loanList = super.mapFromJson(content, LOAN_LIST_TYPE);
 
         int status = result.getResponse().getStatus();
-        assertEquals("failure - expected status 200", 200, status);
-        assertEquals("failure - Loan lists should be equal", expectedLoans, loanList);
-
+        assertEquals("status should be 200", OK.value(), status);
+        assertEquals("loan should be equal", expectedLoans, loanList);
     }
-
 
 }

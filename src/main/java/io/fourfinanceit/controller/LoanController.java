@@ -28,7 +28,7 @@ import static io.fourfinanceit.response.LoanResponse.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/loan")
+@RequestMapping("/loans")
 public class LoanController {
 
     private final LoanRepository loanRepository;
@@ -49,28 +49,12 @@ public class LoanController {
     }
 
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public List<LoanResponse> list() {
-        List<Loan> loanList = loanRepository.findAll();
-        List<LoanResponse> responseList = new ArrayList<>();
-
-        for (Loan loan : loanList) {
-            builder().id(loan.getId());
-             builder().created(loan.getCreated());
-             builder().updated(loan.getUpdated());
-             builder().amount(loan.getAmount());
-             builder().interest(loan.getInterest());
-             builder().termInDays(loan.getTermInDays());
-             builder().loanExtensions(loan.getLoanExtensions());
-
-            LoanResponse loanResponse = builder().build();
-            responseList.add(loanResponse);
-        }
-
-        return responseList;
+    public List<Loan> list() {
+        return loanRepository.findAll();
     }
 
-    @RequestMapping(value = "/list-by-personal-id", method = RequestMethod.GET)
-    public List<Loan> getLoanListByCustomerPersonalId(@RequestParam(value = "personalId") String personalId) {
+    @GetMapping("/personal-id/{personalId}")
+    public List<Loan> getLoanListByCustomerPersonalId(@PathVariable String personalId) {
         return loanService.listLoansByCustomerPersonalId(personalId);
     }
 

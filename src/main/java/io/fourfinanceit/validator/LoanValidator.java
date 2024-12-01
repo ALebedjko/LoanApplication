@@ -1,6 +1,6 @@
 package io.fourfinanceit.validator;
 
-import io.fourfinanceit.domain.Customer;
+import io.fourfinanceit.domain.Client;
 import io.fourfinanceit.domain.LoanRequest;
 import io.fourfinanceit.repository.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,9 +54,9 @@ public class LoanValidator implements Validator {
 
         if (errors.getFieldErrorCount() == 0) {
             String personalId = request.getPersonalId();
-            Customer customer = customerRepository.findOneByPersonalId(personalId);
+            Client client = customerRepository.findOneByPersonalId(personalId);
 
-            if (customer != null && (!customer.getName().equals(request.getName()) || !customer.getSurname().equals(request.getSurname()))) {
+            if (client != null && (!client.getName().equals(request.getName()) || !client.getSurname().equals(request.getSurname()))) {
                 errors.reject("Provided name and surname doesn't corresponds existing customer with personal id " + personalId);
             }
 

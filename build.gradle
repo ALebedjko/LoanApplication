@@ -36,10 +36,12 @@ dependencies {
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.3'
     implementation 'javax.annotation:javax.annotation-api:1.3.2'
     implementation 'org.jetbrains:annotations:24.0.0'
+
     runtimeOnly 'org.springframework.boot:spring-boot-devtools'
-    runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'org.postgresql:postgresql:42.3.8'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.0'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'junit:junit:4.13.2'
 }
 
 eclipse {
@@ -49,7 +51,6 @@ eclipse {
     }
 }
 
-// Uncomment and update Gradle version as needed
-// task wrapper(type: Wrapper) {
-//     gradleVersion = '7.6'
-// }
+test {
+    useJUnitPlatform()
+}

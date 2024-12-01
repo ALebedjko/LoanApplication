@@ -1,6 +1,6 @@
 package io.fourfinanceit.controller;
 
-import io.fourfinanceit.domain.Customer;
+import io.fourfinanceit.domain.Client;
 import io.fourfinanceit.repository.CustomerRepository;
 import io.fourfinanceit.response.CustomerResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,16 +24,16 @@ public class CustomerController {
 
     @RequestMapping("/list")
     public List<CustomerResponse> list() {
-        List<Customer> customerList = customerRepository.findAll();
+        List<Client> clientList = customerRepository.findAll();
         List<CustomerResponse> responseList = new ArrayList<>();
 
-        for (Customer customer : customerList) {
+        for (Client client : clientList) {
             CustomerResponse response = new CustomerResponse();
-            response.setId(customer.getId());
-            response.setName(customer.getName());
-            response.setSurname(customer.getSurname());
-            response.setPersonalId(customer.getPersonalId());
-            response.setLoans(customer.getLoans());
+            response.setId(client.getId());
+            response.setName(client.getName());
+            response.setSurname(client.getSurname());
+            response.setPersonalId(client.getPersonalId());
+            response.setLoans(client.getLoans());
             responseList.add(response);
         }
         return responseList;

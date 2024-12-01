@@ -1,7 +1,7 @@
 package io.fourfinanceit.service;
 
 import io.fourfinanceit.config.LoanConfig;
-import io.fourfinanceit.domain.Customer;
+import io.fourfinanceit.domain.Client;
 import io.fourfinanceit.domain.Loan;
 import io.fourfinanceit.domain.LoanExtension;
 import io.fourfinanceit.domain.LoanRequest;
@@ -37,24 +37,24 @@ public class LoanService {
     @Transactional
     public Loan createLoan(LoanRequest loanRequest) {
         String personalId = loanRequest.getPersonalId();
-        Customer customer = customerRepository.findOneByPersonalId(personalId);
+        Client client = customerRepository.findOneByPersonalId(personalId);
 
         riskAnalyses.forEach(riskAnalysis -> riskAnalysis.analyse(loanRequest));
 
-        if (customer == null) {
-            customer = new Customer(loanRequest.getName(), loanRequest.getSurname(), loanRequest.getPersonalId());
-            LOG.debug("LoanService -> created new Customer:\n" + customer);
+        if (client == null) {
+            client = new Client(loanRequest.getName(), loanRequest.getSurname(), loanRequest.getPersonalId());
+            LOG.debug("LoanService -> created new Customer:\n" + client);
         }
 
         Loan loan = new Loan();
         loan.setAmount(loanRequest.getAmount());
         loan.setInterest(interest(loanRequest.getAmount(), loanRequest.getTermInDays()));
-        loan.setCustomer(customer);
+        loan.setClient(client);
         loan.setTermInDays(loanRequest.getTermInDays());
-        customer.addLoan(loan);
+        client.addLoan(loan);
 
         LOG.debug("LoanService -> Loan to save:\n" + loan + "\n");
-        LOG.debug("LoanService -> For Customer:\n\n" + customer + "\n");
+        LOG.debug("LoanService -> For Customer:\n\n" + client + "\n");
         loanRepository.save(loan);
         return loan;
     }
@@ -76,8 +76,8 @@ public class LoanService {
 
     @Transactional
     public List<Loan> listLoansByCustomerPersonalId(String personalId) {
-        Customer customer = customerRepository.findOneByPersonalId(personalId);
-        return loanRepository.findAllByCustomer(customer);
+        Client client = customerRepository.findOneByPersonalId(personalId);
+        return loanRepository.findAllByClientId(client.getId());
     }
 
     @Transactional
