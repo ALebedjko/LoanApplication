@@ -2,7 +2,7 @@ package io.fourfinanceit.validator;
 
 import io.fourfinanceit.domain.Client;
 import io.fourfinanceit.domain.LoanRequest;
-import io.fourfinanceit.repository.CustomerRepository;
+import io.fourfinanceit.repository.ClientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -21,11 +21,11 @@ public class LoanValidator implements Validator {
     BigDecimal MAX_LOAN_AMOUNT;
 
     private final
-    CustomerRepository customerRepository;
+    ClientRepository clientRepository;
 
     @Autowired
-    public LoanValidator(CustomerRepository customerRepository) {
-        this.customerRepository = customerRepository;
+    public LoanValidator(ClientRepository clientRepository) {
+        this.clientRepository = clientRepository;
     }
 
     @Override
@@ -54,7 +54,7 @@ public class LoanValidator implements Validator {
 
         if (errors.getFieldErrorCount() == 0) {
             String personalId = request.getPersonalId();
-            Client client = customerRepository.findOneByPersonalId(personalId);
+            Client client = clientRepository.findOneByPersonalId(personalId);
 
             if (client != null && (!client.getName().equals(request.getName()) || !client.getSurname().equals(request.getSurname()))) {
                 errors.reject("Provided name and surname doesn't corresponds existing customer with personal id " + personalId);

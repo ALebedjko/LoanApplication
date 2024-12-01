@@ -1,36 +1,30 @@
 package io.fourfinanceit.domain;
 
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static jakarta.persistence.CascadeType.*;
 import static jakarta.persistence.FetchType.*;
-
 
 @Entity
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = false)
-@ToString
 public class Client extends AuditableEntity {
 
     @Id
     @GeneratedValue
     private Long id;
 
-    @NotNull
     private String name;
 
-    @NotNull
     private String surname;
 
-    @NotNull
     private String personalId;
 
     @OneToMany(fetch = LAZY, cascade = ALL, orphanRemoval = true)
@@ -54,4 +48,14 @@ public class Client extends AuditableEntity {
         this.loans.add(loan);
     }
 
+    @Override
+    public String toString() {
+        return "Client{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", surname='" + surname + '\'' +
+                ", personalId='" + personalId + '\'' +
+                ", loans=" + loans.stream().map(Loan::getId).toList() +
+                '}';
+    }
 }

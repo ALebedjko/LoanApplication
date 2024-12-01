@@ -5,7 +5,7 @@ import io.fourfinanceit.domain.Client;
 import io.fourfinanceit.domain.Loan;
 import io.fourfinanceit.domain.LoanExtension;
 import io.fourfinanceit.domain.LoanRequest;
-import io.fourfinanceit.repository.CustomerRepository;
+import io.fourfinanceit.repository.ClientRepository;
 import io.fourfinanceit.repository.LoanRepository;
 import io.fourfinanceit.repository.LoanRequestRepository;
 import io.fourfinanceit.riskanalysis.RiskAnalysis;
@@ -26,24 +26,25 @@ import static java.math.RoundingMode.HALF_EVEN;
 public class LoanService {
 
     private static final int DAYS_PER_WEEK = 7;
+
     private final Logger LOG = LoggerFactory.getLogger(LoanService.class);
 
     private final LoanConfig loanConfig;
     private final LoanRepository loanRepository;
-    private final CustomerRepository customerRepository;
+    private final ClientRepository clientRepository;
     private final List<RiskAnalysis> riskAnalyses;
     private final LoanRequestRepository loanRequestRepository;
 
     @Transactional
     public Loan createLoan(LoanRequest loanRequest) {
         String personalId = loanRequest.getPersonalId();
-        Client client = customerRepository.findOneByPersonalId(personalId);
+        Client client = clientRepository.findOneByPersonalId(personalId);
 
         riskAnalyses.forEach(riskAnalysis -> riskAnalysis.analyse(loanRequest));
 
         if (client == null) {
             client = new Client(loanRequest.getName(), loanRequest.getSurname(), loanRequest.getPersonalId());
-            LOG.debug("LoanService -> created new Customer:\n" + client);
+            LOG.info("LoanService -> created new Customer:\n{}", client);
         }
 
         Loan loan = new Loan();
@@ -53,9 +54,11 @@ public class LoanService {
         loan.setTermInDays(loanRequest.getTermInDays());
         client.addLoan(loan);
 
-        LOG.debug("LoanService -> Loan to save:\n" + loan + "\n");
-        LOG.debug("LoanService -> For Customer:\n\n" + client + "\n");
+        LOG.info("LoanService -> Loan to save:\n{}\n", loan);
+        LOG.info("LoanService -> For Customer:\n\n{}\n", client);
+
         loanRepository.save(loan);
+
         return loan;
     }
 
@@ -76,8 +79,7 @@ public class LoanService {
 
     @Transactional
     public List<Loan> listLoansByCustomerPersonalId(String personalId) {
-        Client client = customerRepository.findOneByPersonalId(personalId);
-        return loanRepository.findAllByClientId(client.getId());
+        return loanRepository.findAllByClientPersonalId(personalId);
     }
 
     @Transactional

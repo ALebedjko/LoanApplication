@@ -1,24 +1,14 @@
-buildscript {
-    ext {
-        springBootVersion = '3.0.0'
-    }
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
-    }
-}
-
 plugins {
-    id 'java'
-    id 'org.springframework.boot' version '3.0.0'
+    id 'org.springframework.boot' version '3.1.2'
     id 'io.spring.dependency-management' version '1.1.0'
+    id 'java'
     id 'eclipse'
     id 'idea'
     id 'io.freefair.lombok' version '8.0.1'
 }
 
+group = 'com.example'
+version = '1.0.0'
 description = 'HomeworkApplication'
 
 java {
@@ -31,17 +21,50 @@ repositories {
 }
 
 dependencies {
+    // Spring Boot and JPA dependencies
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.3'
-    implementation 'javax.annotation:javax.annotation-api:1.3.2'
-    implementation 'org.jetbrains:annotations:24.0.0'
+    implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
 
+    // QueryDSL dependencies
+    implementation('com.querydsl:querydsl-jpa:5.0.0') {
+        exclude group: 'javax.persistence', module: 'javax.persistence-api'
+    }
+    annotationProcessor 'javax.persistence:javax.persistence-api:2.2'
+
+    implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
+
+    // Optional: Support for spatial queries with QueryDSL
+    implementation 'com.querydsl:querydsl-spatial:5.0.0'
+
+    // Hibernate ORM
+    implementation 'org.hibernate:hibernate-core:6.2.5.Final'
+
+    // PostgreSQL database
+    runtimeOnly 'org.postgresql:postgresql:42.7.2'
+
+    // Spring Boot dev tools for development
     runtimeOnly 'org.springframework.boot:spring-boot-devtools'
-    runtimeOnly 'org.postgresql:postgresql:42.3.8'
 
+    // Testing dependencies
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.0'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java', 'src/main/generated']
+        }
+    }
+}
+
+idea {
+    module {
+        sourceDirs += file('src/main/generated')
+        generatedSourceDirs += file('src/main/generated')
+    }
 }
 
 eclipse {
@@ -49,6 +72,29 @@ eclipse {
         containers.remove('org.eclipse.jdt.launching.JRE_CONTAINER')
         containers 'org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-18'
     }
+}
+
+// Ensure that QueryDSL generates sources to 'src/main/generated'
+def generatedSourcesDir = file("$buildDir/generated/sources/annotationProcessor/java/main")
+
+task generateQueryDSL(type: JavaCompile) {
+    group = 'build'
+    description = 'Generate QueryDSL Q-classes'
+
+    source = sourceSets.main.java
+    classpath = configurations.annotationProcessor + sourceSets.main.compileClasspath
+    destinationDir = generatedSourcesDir
+    options.annotationProcessorPath = configurations.annotationProcessor
+}
+
+// Ensure the generated sources are included in the project build
+compileJava {
+    dependsOn generateQueryDSL
+    source generatedSourcesDir
+}
+
+clean {
+    delete generatedSourcesDir
 }
 
 test {

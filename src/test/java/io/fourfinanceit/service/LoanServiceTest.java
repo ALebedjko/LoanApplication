@@ -4,7 +4,7 @@ import io.fourfinanceit.config.LoanConfig;
 import io.fourfinanceit.domain.Client;
 import io.fourfinanceit.domain.Loan;
 import io.fourfinanceit.domain.LoanRequest;
-import io.fourfinanceit.repository.CustomerRepository;
+import io.fourfinanceit.repository.ClientRepository;
 import io.fourfinanceit.repository.LoanRepository;
 import io.fourfinanceit.repository.LoanRequestRepository;
 import io.fourfinanceit.riskanalysis.RiskAnalysis;
@@ -25,20 +25,20 @@ import static org.mockito.Mockito.when;
 public class LoanServiceTest {
 
     private static final Float INTEREST_RATE_FACTOR_PER_WEEK = 1.5f;
-    private static final CustomerRepository customerRepository = mock(CustomerRepository.class);
+    private static final ClientRepository CLIENT_REPOSITORY = mock(ClientRepository.class);
     private static final LoanRepository loanRepository = mock(LoanRepository.class);
     private static final List<RiskAnalysis> riskAnalyses = mock(List.class);
     private static final LoanConfig loanConfig = mock(LoanConfig.class);
 
-    private static final LoanService loanService = new LoanService(loanConfig, loanRepository, customerRepository, riskAnalyses, mock(LoanRequestRepository.class));
+    private static final LoanService loanService = new LoanService(loanConfig, loanRepository, CLIENT_REPOSITORY, riskAnalyses, mock(LoanRequestRepository.class));
 
     private final Logger LOG = LoggerFactory.getLogger(LoanServiceTest.class);
 
     @BeforeAll
     public static void setup() {
-        when(customerRepository.findOneByPersonalId("abc-xyz0")).thenReturn(getFirstExpectedCustomer());
-        when(customerRepository.findOneByPersonalId("abc-xyz1")).thenReturn(getSecondExpectedCustomer());
-        when(customerRepository.findOneByPersonalId("abc-xyz2")).thenReturn(getThirdExpectedCustomer());
+        when(CLIENT_REPOSITORY.findOneByPersonalId("abc-xyz0")).thenReturn(getFirstExpectedCustomer());
+        when(CLIENT_REPOSITORY.findOneByPersonalId("abc-xyz1")).thenReturn(getSecondExpectedCustomer());
+        when(CLIENT_REPOSITORY.findOneByPersonalId("abc-xyz2")).thenReturn(getThirdExpectedCustomer());
         when(loanRepository.findAll()).thenReturn(getListOfExpectedLoans());
         when(loanConfig.getInterestFactorPerWeek()).thenReturn(INTEREST_RATE_FACTOR_PER_WEEK);
     }
@@ -58,22 +58,18 @@ public class LoanServiceTest {
     private static List<Loan> getListOfExpectedLoans() {
         List<Loan> expectedLoansList = new ArrayList<>();
 
-        Loan loan0 = new Loan(getFirstExpectedCustomer(), new BigDecimal("100.00"), 30);
+        Client firstClient = getFirstExpectedCustomer();
+        Loan loan0 = new Loan(firstClient, new BigDecimal("100.00"), new BigDecimal("5.00"), 30);
         expectedLoansList.add(loan0);
 
-        Loan loan1 = new Loan(getSecondExpectedCustomer(), new BigDecimal("200.00"), 60);
+        Client secondClient = getSecondExpectedCustomer();
+        Loan loan1 = new Loan(secondClient, new BigDecimal("200.00"), new BigDecimal("10.00"), 60);
         expectedLoansList.add(loan1);
 
-        Loan loan2 = new Loan();
-        loan2.setTermInDays(90);
-        loan2.setAmount(new BigDecimal("800.00"));
-        loan2.setClient(getSecondExpectedCustomer());
+        Loan loan2 = new Loan(secondClient, new BigDecimal("800.00"), new BigDecimal("20.00"), 90);
         expectedLoansList.add(loan2);
 
-        Loan loan3 = new Loan();
-        loan3.setTermInDays(50);
-        loan3.setAmount(new BigDecimal("200.00"));
-        loan3.setClient(getSecondExpectedCustomer());
+        Loan loan3 = new Loan(secondClient, new BigDecimal("200.00"), new BigDecimal("15.00"), 50);
         expectedLoansList.add(loan3);
 
         return expectedLoansList;
@@ -81,34 +77,42 @@ public class LoanServiceTest {
 
     @Test
     public void loanShouldBeCreatedSuccessfully() throws Exception {
+        BigDecimal expectedAmount = new BigDecimal(100);
+        BigDecimal expectedInterest = new BigDecimal("642.86");
+        int expectedTermInDays = 30;
+
         Loan expectedLoan = new Loan();
-        expectedLoan.setAmount(new BigDecimal(100));
-        expectedLoan.setInterest(new BigDecimal("642.86"));
-        expectedLoan.setTermInDays(30);
+        expectedLoan.setAmount(expectedAmount);
+        expectedLoan.setInterest(expectedInterest);
+        expectedLoan.setTermInDays(expectedTermInDays);
 
         Client expectedClient = new Client("Vanja", "Petrov", "abc-xyz0");
         expectedClient.addLoan(expectedLoan);
 
         LoanRequest loanRequest = new LoanRequest();
-        loanRequest.setAmount(new BigDecimal(100));
+        loanRequest.setAmount(expectedAmount);
         loanRequest.setPersonalId("abc-xyz0");
-        loanRequest.setTermInDays(30);
+        loanRequest.setTermInDays(expectedTermInDays);
         loanRequest.setName("Vanja");
         loanRequest.setSurname("Ivanov");
 
         Loan actualLoan = loanService.createLoan(loanRequest);
-        assertEquals(expectedLoan, actualLoan);
+
+        assertEquals(expectedAmount, actualLoan.getAmount());
+        assertEquals(expectedInterest, actualLoan.getInterest());
+        assertEquals(expectedTermInDays, actualLoan.getTermInDays());
+        assertEquals("abc-xyz0", actualLoan.getClient().getPersonalId());
     }
 
     @Test
-    public void listOfLoansShouldBeRetrievedSuccessfully() throws Exception {
+    public void listOfLoansShouldBeRetrievedSuccessfully() {
         List<Loan> actualList = loanService.listLoans();
         assertNotNull(actualList, "failure - expected not null");
         assertEquals(getListOfExpectedLoans(), actualList);
     }
 
     @Test
-    public void listOfLoanShouldBeSuccessfullyRetrievedByPersonalId() throws Exception {
+    public void listOfLoanShouldBeSuccessfullyRetrievedByPersonalId() {
         String personalId = "abc-xyz1";
         List<Loan> actualLoans = loanService.listLoansByCustomerPersonalId(personalId);
 
