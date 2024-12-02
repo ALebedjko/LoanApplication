@@ -1,7 +1,4 @@
-# Project Name
-
-## Project Description
-Provide a brief description of your project, including its purpose, features, and any unique aspects.
+# Loan Apllication
 
 ## Technologies Used
 - **Java**: Version 18
