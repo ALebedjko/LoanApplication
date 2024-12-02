@@ -41,3 +41,10 @@ Provide a brief description of your project, including its purpose, features, an
 
 5. **Access the application**
   - Open your browser and navigate to `http://localhost:<port-number>`
+
+## Swagger API Documentation
+
+Swagger UI is integrated for easy exploration and testing of RESTful APIs.
+
+- **Access Swagger UI:**
+   - Navigate to `http://localhost:<port>/swagger-ui/index.html` to view and interact with the API documentation.
