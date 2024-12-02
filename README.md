@@ -5,12 +5,12 @@ Provide a brief description of your project, including its purpose, features, an
 
 ## Technologies Used
 - **Java**: Version 18
-- **Jakarta EE**: List the specific Jakarta EE components used
+- **Jakarta EE**
 - **Spring Data JPA**
 - **Spring MVC**
 - **Lombok**
 - **Docker**
-- **Other technologies or frameworks**: List any other technologies/frameworks used
+- **Other technologies or frameworks**
 
 ## Prerequisites
 - **Java SDK**: Version 18
